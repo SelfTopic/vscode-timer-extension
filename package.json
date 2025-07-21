@@ -1,0 +1,69 @@
+{
+  "name": "vscode-timer",
+  "displayName": "VS Code Timer",
+  "description": "Tracks and reports your active time in VS Code",
+  "version": "1.0.0",
+  "publisher": "your-id",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/vscode-timer.git"
+  },
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "main": "./out/extension.js",
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "testytest.helloworld",
+        "title": "Show Coding Time"
+      }
+    ],
+    "configuration": {
+      "title": "VS Code Timer",
+      "properties": {
+        "vscode-timer.enableTelemetry": {
+          "type": "boolean",
+          "default": false,
+          "description": "Разрешить отправку анонимных данных об использовании для улучшения расширения."
+        },
+        "vscode-timer.name": {
+          "type": "string",
+          "default": "",
+          "description": "Имя пользователя"
+        },
+        "vscode-timer.id": {
+          "type": "integer",
+          "default": -1
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.100.0",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.25.1",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.0.1",
+    "vsce": "^2.15.0"
+  }
+}
