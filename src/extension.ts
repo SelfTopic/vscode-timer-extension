@@ -1,49 +1,25 @@
 import * as vscode from 'vscode';
-import { User } from './types/user';
-import UserService from './services/user';
-import * as dotenv from "dotenv";
-
-process.env.API_URL = "http://localhost:3040/vscode-timer";
-
-dotenv.config();
-async function sendTime(
-    userId: number, 
-    name: string, 
-    totalSeconds: number,
-    bool: boolean
-) {
-
-    if (!bool) {
-        return undefined;
-    }
-
-    const response = await fetch(process.env.API_URL!, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            id: userId,
-            name: name,
-            totalSeconds: totalSeconds
-        })
-    });
-
-    if (response.status !== 200) {
-        return undefined;
-    }  
-
-
-}
-
+import DatabaseService from './services/database';
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log("Extensions initialize");
+    console.log("Timer extension activated");
+    console.log("Node.js version:", process.version);
+    console.log("Electron version:", process.versions.electron);
+    console.log("NODE_MODULE_VERSION:", process.versions.modules);
 
-    let totalSeconds = 0; 
-    let isActive = vscode.window.state.focused; 
-    let interval: NodeJS.Timeout | undefined;
-    const userService = new UserService();
+    const dbService = new DatabaseService(context);
+    let sessionSeconds = 0;
+    let isActive = vscode.window.state.focused;
+    let statusBarItem: vscode.StatusBarItem;
+
+    function initStatusBar() {
+        if (statusBarItem) {
+            statusBarItem.dispose();
+        }
+        statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+        statusBarItem.show();
+        return statusBarItem;
+    }
 
     function formatTime(seconds: number): string {
         const hours = Math.floor(seconds / 3600);
@@ -52,12 +28,30 @@ export function activate(context: vscode.ExtensionContext) {
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
+    function updateStatusBar() {
+        try {
+            const totalSeconds = dbService.getTotalSeconds() + sessionSeconds;
+            statusBarItem.text = `Время: Total: ${formatTime(totalSeconds)} | Session: ${formatTime(sessionSeconds)}`;
+        } catch (error) {
+            console.error("Status bar update error:", error);
+        }
+    }
+
+    let interval: NodeJS.Timeout | undefined;
+    statusBarItem = initStatusBar();
+    updateStatusBar();
+
     function startTimer() {
         if (isActive && !interval) {
             interval = setInterval(() => {
-                totalSeconds++;
-                vscode.window.setStatusBarMessage(`Время в VS Code: ${formatTime(totalSeconds)}`, 5000);
-            }, 1000); 
+                sessionSeconds++;
+                updateStatusBar();
+                
+                if (sessionSeconds % 300 === 0) {
+                    dbService.addTime(300);
+                    sessionSeconds = 0;
+                }
+            }, 1000);
         }
     }
 
@@ -65,162 +59,50 @@ export function activate(context: vscode.ExtensionContext) {
         if (interval) {
             clearInterval(interval);
             interval = undefined;
-
         }
     }
 
-    const telemetryEnabled = vscode.workspace
-        .getConfiguration('vscode-timer')
-        .get('enableTelemetry', false);
-
-    if (!telemetryEnabled) {
-        vscode.window.showInformationMessage(
-            'Разрешить отправку данных о времени использования VS Code?',
-            'Да',
-            'Нет'
-        ).then(selection => {
-            console.log(`Выбранный ответ: ${selection}`);
-            if (selection === 'Да') {
-                console.log(`Обновление данных телеметрии`);
-                vscode.workspace
-                    .getConfiguration('vscode-timer')
-                    .update('enableTelemetry', true, vscode.ConfigurationTarget.Global)
-                    .then((v) => {
-                        console.log("Успешное изменение данных.");
-                    });
-
-                    const conf = vscode.workspace.getConfiguration('vscode-time');
-                    const inspection = conf.inspect('enableTelemetry');
-                    console.log("Global value:", inspection?.globalValue);
-                    console.log("Workspace value:", inspection?.workspaceValue);
-                    console.log("WorkspaceFolder value:", inspection?.workspaceFolderValue);
-            }
-        });
-    }
-
-    if (!telemetryEnabled) {
-        return;
-    };
-    
-    let userId = userService.getId();
-    let name = userService.getName();
-
-    console.log(`name: ${name}`);
-
-    async function register(name: string): Promise<User | undefined> {
-
-        console.log(`Вызвана функция register`);
-        const response = await fetch(process.env.API_URL! + "-register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name: name
-            })
-        });
-
-
-        if (response.status !== 200) {
-            console.log(`Функция register вернет: undefiend потому что status code equal ${response.status}`);
-            return undefined;
-        }
-
-        const data = await response.json();
-        console.log(`Функция register вернет: ok: ${data.ok}, user: ${data.user}`);
-        return data.user;
-    }
-
-    async function getUserData() {
-        console.log(`Вызвана функция getUserData`);
-        if (!userId || userId === -1) {
-            if (!name || name === "") {
-                name = await vscode.window.showInputBox({
-                    prompt: "Введите ваше имя",
-                    placeHolder: "тут пиши свое имя крч",
-                    validateInput: (value: string) => {
-                        return value.trim().length > 0 ? null : "Имя не может быть пустым";
-                    }
-                });
-
-                if (!name) {
-                    console.log(`Функция getUserData вернет false потому что не найдено имя после ввода`);
-                    return false;
-                }
-
-                userService.setName(name);
-
-                const data = await register(name);
-
-                if (!data) {
-                    console.log(`Функция getUserData вернет false потому что функция register вернула undefiend`);
-                    return false;
-                }
-
-                userId = data.id;
-                name = data.name;
-
-                console.log(`name: ${name}, id: ${userId}`);
-
-                userService.setId(userId);
-                console.log(`Функция getUserData вернет true ведь и имя и айди успешно назначены`);
-                return true;
-            }
-
-            const data = await register(name);
-
-            if (!data) {
-                return false;
-            }
-
-            userId = data.id;
-            name = data.name;
-
-            return true;
-        }
-
-        return true;
-
-    }
-
-
-    getUserData();
-
-
-    const windowStateListener = vscode.window.onDidChangeWindowState((state) => {
+    const windowStateListener = vscode.window.onDidChangeWindowState(state => {
         isActive = state.focused;
         if (isActive) {
             startTimer();
         } else {
             stopTimer();
-            sendTime(
-                userId!,
-                name!,
-                totalSeconds,
-                true
-            );
+            if (sessionSeconds > 0) {
+                dbService.addTime(sessionSeconds);
+                sessionSeconds = 0;
+            }
+            updateStatusBar();
         }
     });
 
-    if (isActive) {
-        startTimer();
-    }
-
-    let disposable = vscode.commands.registerCommand('testytest.helloworld', () => {
-        vscode.window.showInformationMessage(`Время в VS Code: ${formatTime(totalSeconds)}. Your id: ${userId}. Your name: ${name}`);
+    const commandHandler = vscode.commands.registerCommand('vscodetimer.showtime', () => {
+        const total = dbService.getTotalSeconds() + sessionSeconds;
+        vscode.window.showInformationMessage(
+            `Общее время: ${formatTime(total)}\nТекущая сессия: ${formatTime(sessionSeconds)}`
+        );
     });
-
-    context.subscriptions.push(disposable, windowStateListener);
 
     context.subscriptions.push({
         dispose: () => {
             stopTimer();
+            if (sessionSeconds > 0) {
+                dbService.addTime(sessionSeconds);
+            }
+            dbService.close();
+            statusBarItem.dispose();
         }
     });
 
+    context.subscriptions.push(
+        windowStateListener,
+        commandHandler
+    );
+
+    if (isActive) {
+        startTimer();
+    }
 }
-
-
 export function deactivate() {
-
+    return;
 }
