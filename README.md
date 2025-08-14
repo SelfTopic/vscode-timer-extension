@@ -1,33 +1,85 @@
+# VS Code Timer - Extension
 
-# VS Code Timer Extension
-Расширение для отслеживания времени, проведенного в VS Code, с возможностью отправки статистики на сервер (при согласии пользователя).
-## Установка
-1. Перейдите в раздел расширений в VS Code (Ctrl+Shift+X).
-2. Найдите `VS Code Timer` и установите его.
-3. Перезапустите VS Code.
-## Настройка
-При первом запуске расширение спросит разрешение на отправку анонимной статистики. Вы можете ответить "Да" или "Нет". Если вы выберете "Да", то вас попросят ввести имя для регистрации. Это имя будет использоваться для идентификации вашей статистики.
-## Использование
-После установки и настройки расширение автоматически начнет отсчет времени, когда окно VS Code находится в фокусе. Текущее время будет отображаться в статусной строке (внизу справа) каждые 5 секунд.
-Когда окно теряет фокус, таймер останавливается, и накопленное время отправляется на сервер (если разрешена телеметрия).
-## Особенности
-- Время отображается в формате ЧЧ:ММ:СС.
-- Данные сохраняются в настройках VS Code (глобальные настройки).
-- Отправка данных происходит только при потере фокуса окном.
-- Регистрация пользователя происходит один раз, при последующих запусках используется сохраненный идентификатор.
-## Конфигурация
-Вы можете изменить настройки расширения через настройки VS Code (Файл -> Настройки -> Расширения -> VS Code Timer):
-- `vscode-timer.enableTelemetry`: разрешить или запретить отправку данных (по умолчанию: false). При изменении этого параметра вам будет предложено заново принять решение.
-## Команды
-Расширение предоставляет команду для просмотра текущего времени и информации о пользователе:
-- `testytest.helloworld` - показывает всплывающее сообщение с текущим временем, вашим ID и именем.
-Чтобы вызвать команду, откройте палитру команд (Ctrl+Shift+P) и введите `Hello World`.
-## Серверная часть
-Расширение отправляет данные на сервер по адресу, указанному в переменной окружения `API_URL` (по умолчанию: `http://localhost:3040/vscode-timer`). Вы можете изменить этот адрес, задав переменную окружения в файле `.env` в корне проекта расширения.
-## Лицензия
-Это расширение распространяется под лицензией MIT. Подробнее см. в файле [LICENSE](LICENSE).
+Track your coding time in Visual Studio Code with this lightweight extension. Automatically records both your current session time and total coding time across all sessions.
 
-## Примечания
-- В README указан адрес сервера по умолчанию. Если вы планируете использовать другой адрес, укажите его.
-- Команда `testytest.helloworld` используется для демонстрации. Вы можете изменить ее на более подходящую, обновив код расширения и README.
-- Убедитесь, что у вас есть файл LICENSE в корне репозитория, если вы используете лицензию MIT.
+### Features
+    ⏱️ Real-time tracking of your coding sessions
+
+    📊 Separate counters for current session and total time
+
+    📍 Status bar integration showing both session and total time
+
+    💾 Persistent storage - your data survives restarts and updates
+
+    📈 Accurate tracking - pauses when VS Code loses focus
+
+    💻 Multi-window support - works across multiple VS Code instances
+
+### Installation
+    Open VS Code
+
+    Go to Extensions view (Ctrl+Shift+X)
+
+    Search for "VS Code Timer"
+
+    Click Install
+
+Note: This is an alpha version - please report any issues you encounter!
+
+Usage
+After installation, the timer starts automatically:
+
+Status Bar: Shows your total and session time in the bottom right corner
+Format: Время: Total: 00:00:00 | Session: 00:00:00
+
+### Commands:
+
+    Show Coding Time: Display current times in a notification
+    (Open command palette with Ctrl+Shift+P and type "Show Coding Time")
+
+### Automatic Saving:
+
+    Timer pauses when VS Code loses focus
+
+    Data saves every 5 minutes and when closing VS Code
+
+### Data Storage
+    Your coding time data is stored securely in VS Code's extension storage:
+
+    Location: ~/.vscode/extensions/your-id.vscode-timer/data/usage.db
+
+    Format: SQLite database (local, private, never leaves your machine)
+
+### Requirements
+    Visual Studio Code v1.82.0 or higher
+
+    Node.js v16+ (bundled with VS Code)
+
+### Known Issues (Alpha)
+    Initial activation may take 5-10 seconds after VS Code starts
+
+    Rare timing discrepancies when rapidly switching focus
+
+    Database location might change in future versions
+
+### Future Plans
+    Add daily/weekly/monthly breakdowns
+
+    Export data to CSV/JSON
+
+    Customizable status bar format
+
+    Pomodoro timer integration
+
+    Productivity insights dashboard
+
+### Contributing
+    This project is in early alpha. Contributions are welcome! Please report issues or suggest features in the GitHub repository.
+
+### License
+    MIT License - see LICENSE for details
+
+Version 0.2.0-alpha
+Released: October 2023
+*For VS Code 1.82+*
+Important: This alpha version may contain bugs. Data format may change in future releases.
