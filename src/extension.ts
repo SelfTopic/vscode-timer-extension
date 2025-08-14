@@ -9,6 +9,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const dbService = new DatabaseService(context);
     let sessionSeconds = 0;
+    let sessionTotalSeconds = 0;
     let isActive = vscode.window.state.focused;
     let statusBarItem: vscode.StatusBarItem;
 
@@ -31,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
     function updateStatusBar() {
         try {
             const totalSeconds = dbService.getTotalSeconds() + sessionSeconds;
-            statusBarItem.text = `Время: Total: ${formatTime(totalSeconds)} | Session: ${formatTime(sessionSeconds)}`;
+            statusBarItem.text = `Время: Total: ${formatTime(totalSeconds)} | Session: ${formatTime(sessionTotalSeconds)}`;
         } catch (error) {
             console.error("Status bar update error:", error);
         }
@@ -45,6 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (isActive && !interval) {
             interval = setInterval(() => {
                 sessionSeconds++;
+                sessionTotalSeconds++;
                 updateStatusBar();
                 
                 if (sessionSeconds % 300 === 0) {
