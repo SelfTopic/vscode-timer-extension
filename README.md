@@ -79,7 +79,7 @@ Format: Время: Total: 00:00:00 | Session: 00:00:00
 ### License
     MIT License - see LICENSE for details
 
-Version 0.2.0-alpha
-Released: October 2023
-*For VS Code 1.82+*
+Version 0.2.0-alpha\
+Released: August 2025\
+*For VS Code 1.82+*\
 Important: This alpha version may contain bugs. Data format may change in future releases.
